@@ -1,0 +1,15 @@
+---
+- name: deploy docker files to server
+  copy:
+    src: files/app
+    dest: /home/vagrant
+  register: sync_result
+
+- name: build and deploy application
+  become: true
+  shell: |
+    docker-compose up -d
+  args:
+    chdir: /home/vagrant/app
+  when: sync_result.changed
+  register: docker-compose

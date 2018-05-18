@@ -1,0 +1,68 @@
+---
+- name: remove legacy packages
+  become: true
+  yum:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+      - docker
+      - docker-client
+      - docker-client-latest
+      - docker-common
+      - docker-latest
+      - docker-latest-logrotate
+      - docker-logrotate
+      - docker-selinux
+      - docker-engine-selinux
+      - docker-engine
+
+- name: install packages
+  become: true
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+
+- name: check for docker-ce repo
+  stat:
+    path: /etc/yum.repos.d/docker-ce.repo
+  register: repo_exist
+
+- name: import docker-ce repo
+  become: true
+  shell: |
+    yum-config-manager \
+    --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo
+  when: repo_exist.stat.exists == False
+
+- name: install docker-ce
+  become: true
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+      - docker-ce
+
+- name: add vagrant user to "docker" group
+  become: true
+  user:
+    name: vagrant
+    groups: docker
+    append: True
+
+- name: make sure docker is up and running
+  become: true
+  systemd:
+    name: docker
+    enabled: yes
+    state: started
+
+- name: install docker-compose
+  become: true
+  pip:
+    name: docker-compose
+    state: present

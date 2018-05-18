@@ -1,0 +1,21 @@
+---
+- name: enable epel-release
+  become: true
+  yum:
+    name: epel-release
+    state: present
+
+- name: upgrade all packages
+  become: true
+  yum:
+    name: "*"
+    state: latest
+
+- name: install packages
+  become: true
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+      - initscripts
+      - python-pip
